@@ -1,0 +1,161 @@
+name: PLCC Assignment Autograding
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  autograding:
+    name: PLCC Autograding Tests
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ourplcc/plcc:latest
+      options: --user root
+
+    steps:
+      - name: Checkout student code
+        uses: actions/checkout@v4
+
+      - name: Verify PLCC installation
+        run: |
+          plcc --version || echo "PLCC version check failed"
+          java -version
+          python3 --version
+
+      - name: Test Scanner Questions
+        run: |
+          echo "Testing Scanner Questions"
+          failed_tests=0
+
+          for question_dir in q*/; do
+            if [[ -d "$question_dir" && -f "$question_dir/grammar" && -f "$question_dir/input" && -f "$question_dir/expected" ]]; then
+              echo "Testing $question_dir"
+              cd "$question_dir"
+              
+              if ! plccmk -c grammar 2>&1; then
+                echo "FAIL $question_dir: Grammar compilation failed"
+                failed_tests=$((failed_tests + 1))
+                cd ..
+                continue
+              fi
+              
+              if scan < input > actual 2>&1; then
+                if diff expected actual > /dev/null 2>&1; then
+                  echo "PASS $question_dir: Scanner test passed"
+                else
+                  echo "FAIL $question_dir: Output mismatch"
+                  echo "Expected vs Actual (first 5 lines):"
+                  diff expected actual | head -5
+                  failed_tests=$((failed_tests + 1))
+                fi
+              else
+                echo "FAIL $question_dir: Scanner execution failed"
+                failed_tests=$((failed_tests + 1))
+              fi
+              
+              cd ..
+            fi
+          done
+
+          if [ $failed_tests -gt 0 ]; then
+            echo "Scanner tests failed: $failed_tests"
+            exit 1
+          fi
+
+      - name: Test Parser Questions
+        run: |
+          echo "Testing Parser Questions"
+          failed_tests=0
+
+          for question_dir in q*/; do
+            if [[ -d "$question_dir" && -f "$question_dir/grammar" && -d "$question_dir/inputs" ]]; then
+              echo "Testing $question_dir"
+              cd "$question_dir"
+              
+              if ! plccmk -c grammar 2>&1; then
+                echo "FAIL $question_dir: Grammar compilation failed"
+                failed_tests=$((failed_tests + 1))
+                cd ..
+                continue
+              fi
+              
+              legal_failed=0
+              for legal_file in inputs/legal-*; do
+                if [[ -f "$legal_file" ]]; then
+                  if ! parse -n < "$legal_file" > /dev/null 2>&1; then
+                    echo "FAIL $question_dir: $(basename "$legal_file") should be accepted"
+                    legal_failed=$((legal_failed + 1))
+                  fi
+                fi
+              done
+              
+              illegal_failed=0
+              for illegal_file in inputs/illegal-*; do
+                if [[ -f "$illegal_file" ]]; then
+                  if parse -n < "$illegal_file" > /dev/null 2>&1; then
+                    echo "FAIL $question_dir: $(basename "$illegal_file") should be rejected"
+                    illegal_failed=$((illegal_failed + 1))
+                  fi
+                fi
+              done
+              
+              if [ $legal_failed -eq 0 ] && [ $illegal_failed -eq 0 ]; then
+                echo "PASS $question_dir: All parser tests passed"
+              else
+                failed_tests=$((failed_tests + 1))
+              fi
+              
+              cd ..
+            fi
+          done
+
+          if [ $failed_tests -gt 0 ]; then
+            echo "Parser tests failed: $failed_tests"
+            exit 1
+          fi
+
+      - name: Test Interpreter Questions
+        run: |
+          echo "Testing Interpreter Questions"
+          failed_tests=0
+
+          for question_dir in q*/; do
+            if [[ -d "$question_dir" && -f "$question_dir/grammar" && -f "$question_dir/input" && -f "$question_dir/expected" ]]; then
+              cd "$question_dir"
+              
+              if grep -q "%%%" grammar 2>/dev/null; then
+                echo "Testing $question_dir"
+                
+                if ! plccmk -c grammar 2>&1; then
+                  echo "FAIL $question_dir: Grammar compilation failed"
+                  failed_tests=$((failed_tests + 1))
+                  cd ..
+                  continue
+                fi
+                
+                if rep -n < input > actual 2>&1; then
+                  if diff expected actual > /dev/null 2>&1; then
+                    echo "PASS $question_dir: Interpreter test passed"
+                  else
+                    echo "FAIL $question_dir: Output mismatch"
+                    echo "Expected vs Actual (first 5 lines):"
+                    diff expected actual | head -5
+                    failed_tests=$((failed_tests + 1))
+                  fi
+                else
+                  echo "FAIL $question_dir: Interpreter execution failed"
+                  failed_tests=$((failed_tests + 1))
+                fi
+              fi
+              
+              cd ..
+            fi
+          done
+
+          if [ $failed_tests -gt 0 ]; then
+            echo "Interpreter tests failed: $failed_tests"
+            exit 1
+          fi

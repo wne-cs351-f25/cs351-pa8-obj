@@ -1,0 +1,37 @@
+# Ruler Configuration File
+# See https://ai.intellectronica.net/ruler for documentation.
+
+# Configure popular coding agents for PLCC development
+default_agents = ["claude", "gemini-cli", "copilot", "cursor", "aider", "windsurf", "cline"]
+
+# --- Agent Specific Configurations ---
+# Enable the most popular coding agents with their default paths
+
+[agents.claude]
+enabled = true
+output_path = "CLAUDE.md"
+
+[agents.gemini-cli]
+enabled = true
+output_path = "GEMINI.md"
+
+[agents.copilot]
+enabled = true
+output_path = ".github/copilot-instructions.md"
+
+[agents.cursor]
+enabled = true
+output_path = ".cursor/rules/ruler_cursor_instructions.mdc"
+
+[agents.aider]
+enabled = true
+output_path_instructions = "ruler_aider_instructions.md"
+output_path_config = ".aider.conf.yml"
+
+[agents.windsurf]
+enabled = true
+output_path = ".windsurf/rules/ruler_windsurf_instructions.md"
+
+[agents.cline]
+enabled = true
+output_path = ".clinerules"
