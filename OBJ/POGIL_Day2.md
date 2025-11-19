@@ -125,7 +125,7 @@ define Derived = class extends Base
 end
 
 define obj = .<new Derived>init()
-.<obj>getStaticX()    % 100 (Base's static, because myclass = Base)
+.<obj>getStaticX()    % 100 (Base's static, because <myclass> is bound to Base)
 .<obj>getInstanceX()  % 200 (Base's instance field)
 
 % Direct access tests:
@@ -451,70 +451,17 @@ define obj = .<new B>init()
 
 ---
 
-## Final Reflection (10 minutes)
-
-**Individual Synthesis:**
-
-27. What's the most surprising thing you learned about OBJ's binding semantics?
-
-28. When would you use `<self>` vs `<myclass>` for accessing static members?
-
-29. What real-world programming problem does the `this` vs `self` distinction solve?
-
-**Group Discussion:**
-
-30. As a group, explain the difference between these three access patterns:
-    - Direct field access: `<obj>field`
-    - Method access to own field: `field` (inside a method)
-    - Method access with self: `<self>field`
-
-31. Create a simple example that demonstrates when shallow binding (`this`) would be preferred over deep binding (`self`)
-
----
-
-## Key Takeaways
-
-You've now mastered:
-
-- **Static members are shared** across all instances in an inheritance chain
-- **`<self>` provides dynamic binding** for polymorphism
-- **`<this>` provides shallow binding** to the current object part
-- **`<myclass>` binds statically** to the class where code is defined
-- **`<superclass>` accesses parent class** static members
-- **`<!@>` provides lexical closure** over the environment where a class was defined
-- **Field shadowing** creates multiple fields with the same name in different object parts
-
-**For the Homework (Q1-Q6):**
-
-- Each question will require understanding which symbol to use in specific scenarios
-- Remember: `self` ≠ `this` ≠ `myclass`!
-- Draw environment diagrams when confused
-- Test small examples to verify your understanding
-
----
-
-## Debugging Cheat Sheet
-
-| What you see | Why | Fix |
-|--------------|-----|-----|
-| Method returns wrong static value | Used `<myclass>` instead of `<self>` | Change to `<self>` for dynamic binding |
-| Can't access subclass method | Variable bound to parent object part from `init` | Ensure `init` in subclass returns `this` |
-| Field has wrong value | Method accesses shadowed parent field | Use `<self>field` or define method in correct class |
-| "no binding for X" | Accessing member through wrong object part | Check what `init` returns and which methods are defined where |
-
----
-
 ## Summary Cheat Sheet
 
-| Symbol       | Binding Type | Resolves To | Use Case |
-|--------------|--------------|-------------|----------|
-| `self`       | Dynamic (deep) | Runtime class of base object | Polymorphic calls, accessing overridden statics |
-| `this`       | Static (shallow) | Current object part | Access current class's members explicitly |
-| `super`      | Static (shallow) | Parent object part | Call overridden parent methods |
-| `myclass`    | Static | Class where code is written | Access static members (non-polymorphic) |
-| `superclass` | Static | Parent class | Access parent's static members |
-| `<!@>`       | Lexical | Environment where class defined | Access closure variables |
-| `@`          | Dynamic | Current environment | Reflection/debugging |
+| Symbol       | Binding Type     | Resolves To                     | Use Case                                        |
+| ------------ | ---------------- | ------------------------------- | ----------------------------------------------- |
+| `self`       | Dynamic (deep)   | Runtime class of base object    | Polymorphic calls, accessing overridden statics |
+| `this`       | Static (shallow) | Current object part             | Access current class's members explicitly       |
+| `super`      | Static (shallow) | Parent object part              | Call overridden parent methods                  |
+| `myclass`    | Static           | Class where code is written     | Access static members (non-polymorphic)         |
+| `superclass` | Static           | Parent class                    | Access parent's static members                  |
+| `<!@>`       | Lexical          | Environment where class defined | Access closure variables                        |
+| `@`          | Dynamic          | Current environment             | Reflection/debugging                            |
 
 ---
 
