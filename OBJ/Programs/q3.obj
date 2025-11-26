@@ -7,7 +7,7 @@ define B = class extends A
   field x
 
   % Modify so field x is assigned value in the passed x.
-  method foo = proc(x) set x = x
+  method foo = proc(x) set <this>x = x
 end
 
 define C = class extends B
@@ -17,3 +17,6 @@ define C = class extends B
 end
 
 % Add code to test your solution
+define o = .<new C>init()
+.<o>foo(10)
+<o>x
